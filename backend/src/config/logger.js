@@ -6,6 +6,6 @@ export function writeLog(level, message, fields = {}) {
     ...fields,
   };
   const output = JSON.stringify(entry);
-  if (level === 'error') console.error(output);
+  if (level === "error") console.error(output);
   else console.log(output);
 }

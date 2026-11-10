@@ -20,10 +20,10 @@ concurrency:
 jobs:
   quality:
     name: Build and check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
@@ -38,9 +38,9 @@ jobs:
     env:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/bus_trip?schema=public
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -74,9 +74,9 @@ jobs:
 
   security:
     name: Scan repository with Trivy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Scan source, dependencies and configuration
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -91,7 +91,7 @@ jobs:
   container-build:
     name: Build and scan container images
     needs: [quality, security]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -99,7 +99,7 @@ jobs:
       image_prefix: ${{ steps.image.outputs.prefix }}
       short_sha: ${{ steps.image.outputs.short_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set image prefix
         id: image
         run: |
@@ -157,10 +157,10 @@ jobs:
     name: Deploy to Ubuntu VM
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
     needs: container-build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Prepare SSH and deployment environment
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
@@ -215,10 +215,10 @@ jobs:
           "${SSH[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/nginx' '$DEPLOY_PATH/scripts/lib'"
           "${SCP[@]}" docker-compose.prod.yml "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
           "${SCP[@]}" nginx/nginx.prod.conf "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/nginx/"
-          "${SCP[@]}" scripts/deploy.sh scripts/renew-certificate.sh scripts/backup-db.sh scripts/restore-db.sh "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/scripts/"
+          "${SCP[@]}" scripts/deploy.sh scripts/renew-certificate.sh scripts/backup-db.sh scripts/restore-db.sh scripts/prepare-cert-permissions.sh "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/scripts/"
           "${SCP[@]}" scripts/lib/compose.sh "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/scripts/lib/"
           "${SCP[@]}" "$RUNNER_TEMP/deploy.env" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/.env.production"
 
           printf '%s\n%s\n' "$GHCR_PULL_USERNAME" "$GHCR_PULL_TOKEN" | \
             "${SSH[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'read -r user; read -r token; printf "%s" "$token" | docker login ghcr.io --username "$user" --password-stdin; unset token'
-          "${SSH[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "chmod 600 '$DEPLOY_PATH/.env.production' && chmod +x '$DEPLOY_PATH/scripts/deploy.sh' '$DEPLOY_PATH/scripts/renew-certificate.sh' '$DEPLOY_PATH/scripts/backup-db.sh' '$DEPLOY_PATH/scripts/restore-db.sh' && '$DEPLOY_PATH/scripts/deploy.sh' '$DEPLOY_PATH'"
+          "${SSH[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "chmod 600 '$DEPLOY_PATH/.env.production' && chmod +x '$DEPLOY_PATH/scripts/deploy.sh' '$DEPLOY_PATH/scripts/renew-certificate.sh' '$DEPLOY_PATH/scripts/backup-db.sh' '$DEPLOY_PATH/scripts/restore-db.sh' '$DEPLOY_PATH/scripts/prepare-cert-permissions.sh' && '$DEPLOY_PATH/scripts/deploy.sh' '$DEPLOY_PATH'"

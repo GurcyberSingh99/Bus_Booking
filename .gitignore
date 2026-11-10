@@ -30,6 +30,7 @@ build/
 # Testing / Coverage
 coverage/
 /backups/
+/.local-certs/
 *.sql.gz
 *.sql.gz.sha256
 

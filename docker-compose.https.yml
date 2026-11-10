@@ -1,0 +1,25 @@
+services:
+  https-demo:
+    image: nginxinc/nginx-unprivileged:alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
+    profiles: ['https-demo']
+    init: true
+    restart: unless-stopped
+    ports:
+      - '8443:8443'
+    volumes:
+      - ./nginx/nginx.local-https.conf:/etc/nginx/nginx.conf:ro
+      - ./.local-certs:/etc/nginx/certs:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget --no-check-certificate -q --spider https://127.0.0.1:8443/ready',
+        ]
+      interval: 15s
+      timeout: 4s
+      retries: 5

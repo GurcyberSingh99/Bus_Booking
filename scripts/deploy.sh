@@ -24,6 +24,7 @@ if [[ ! -s /etc/letsencrypt/live/app/fullchain.pem ]]; then
     --cert-name app --domain "$APP_DOMAIN" --email "$CERTBOT_EMAIL"
 fi
 
+"$APP_DIR/scripts/prepare-cert-permissions.sh"
 compose up -d nginx
 curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 3 \
   --resolve "$APP_DOMAIN:443:127.0.0.1" "https://$APP_DOMAIN/ready"

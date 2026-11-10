@@ -16,7 +16,7 @@ Add these `production` environment secrets:
 - `GHCR_PULL_USERNAME`, `GHCR_PULL_TOKEN` (token needs `read:packages`)
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `DATABASE_URL`
 
-`DATABASE_URL` must connect to the Compose database service and use URL-encoded credentials, for example `postgresql://USER:PASSWORD@database:5432/bus_reservation_db?schema=public`. Keep the username/password consistent with the matching secrets.
+`DATABASE_URL` must connect to the Compose database service and use URL-encoded credentials, for example `postgresql://USER:PASSWORD@database:5432/bus_reservation_db?schema=public`. Keep the username/password consistent with the matching secrets. The remote `.env.production` is mode `600`; its base64 secret fields are an encoding for transport/Compose handling, **not encryption**. Restrict SSH access to the deployment user and protect VM backups.
 
 GitHub Actions deployment is enabled only when `DEPLOY_ENABLED=true`. Pushes to `main` deploy the immutable SHA image; manually dispatching `CI / CD` from `main` can deploy the current SHA or a previous `sha-<12 hex>` tag using `rollback_image_tag`. Keep production secrets in the `production` environment and never in repository files.
 

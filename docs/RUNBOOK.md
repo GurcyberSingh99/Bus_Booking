@@ -11,7 +11,17 @@ curl -fsS http://localhost:8080/health
 curl -fsS http://localhost:8080/ready
 ```
 
-The frontend and Nginx are available at `http://localhost:8080`. PostgreSQL data persists in the named `postgres_data` volume. Backend startup applies migrations and idempotently seeds 15 sample routes and seats for the next 30 days. For Ubuntu HTTPS deployment and GitHub Actions setup, follow [DEPLOYMENT.md](DEPLOYMENT.md).
+The frontend and Nginx are available at `http://localhost:8080`. PostgreSQL data persists in the named `postgres_data` volume. Backend/API, frontend, and local reverse proxy run non-root. Backend startup applies migrations and idempotently seeds 15 sample routes and seats for the next 30 days. For Ubuntu HTTPS deployment and GitHub Actions setup, follow [DEPLOYMENT.md](DEPLOYMENT.md).
+
+For a local HTTPS deployment exercise, generate an ignored self-signed certificate and launch the extra proxy:
+
+```sh
+bash scripts/create-local-https-cert.sh
+docker compose -f docker-compose.yml -f docker-compose.https.yml --profile https-demo up --build -d
+curl -kfsS https://localhost:8443/ready
+```
+
+The local certificate is self-signed, so browsers warn until it is trusted; `curl -k` is only for this disposable demo certificate. Production uses a Let's Encrypt certificate and HTTPS on ports 80/443. The production reverse proxy listens on unprivileged container ports 8080/8443, and a restricted supplementary group grants it read access to the TLS key.
 
 ## Health, logs and first checks
 

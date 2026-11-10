@@ -2,6 +2,10 @@
 
 JavaScript monorepo for bus trip discovery and seat reservations, with a PostgreSQL-backed booking API.
 
+## Architecture
+
+See [the architecture diagram](docs/ARCHITECTURE.md) for request flow, database persistence, CI image publishing and deployment.
+
 ## Requirements
 
 - Node.js 24+
@@ -22,7 +26,7 @@ npm install
 npm run dev
 ```
 
-The API listens on `http://localhost:5000`; `/health` reports process health and `/ready` checks database connectivity. The frontend is at `http://localhost:5173`. Set `DATABASE_URL` in `backend/.env` to your local PostgreSQL database. Replace the example `USER` and `PASSWORD` values with local credentials; the example contains no real secrets. Starting the backend applies migrations and loads sample trips and seats.
+The API listens on `http://localhost:5000`; `/health` reports process health and `/ready` checks database connectivity. The frontend is at `http://localhost:5173`. Set `DATABASE_URL` in `backend/.env` to your local PostgreSQL database. Replace the example `USER` and `PASSWORD` values with local credentials; the example contains no real secrets. Starting the backend applies migrations and loads sample trips and seats. The API and frontend containers run as non-root users.
 
 ## API
 
@@ -37,7 +41,15 @@ Booking JSON requires `tripId`, `travelDate`, `boardingStopId`, `dropStopId`, `s
 
 Copy `.env.example` to the repository root `.env`, set local PostgreSQL credentials there, then run `docker compose up --build -d`. Open `http://localhost:8080`; `/health` and `/ready` are also exposed. Use `docker compose logs -f` to inspect containers and `docker compose down` to stop them (the database volume is kept).
 
+For a local TLS reverse-proxy demo, run `bash scripts/create-local-https-cert.sh`, then `docker compose -f docker-compose.yml -f docker-compose.https.yml --profile https-demo up --build -d`. Open `https://localhost:8443`; this uses a short-lived self-signed certificate, so browsers show a trust warning. Verify from PowerShell with `curl.exe -k https://localhost:8443/ready`. The production Ubuntu deployment uses Let's Encrypt on ports 80/443.
+
 For health checks, backup/restore, recovery and rollback steps, see [docs/RUNBOOK.md](docs/RUNBOOK.md).
+
+## Evidence
+
+- [GitHub Actions runs](https://github.com/GurcyberSingh99/Bus_Booking/actions)
+- [Backup/restore and restart drill evidence](docs/evidence/backup-restore.md)
+- [Pipeline evidence and findings](docs/evidence/pipeline.md)
 
 ## CI/CD
 

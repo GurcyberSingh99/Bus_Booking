@@ -1,0 +1,7 @@
+# Pipeline evidence
+
+The public workflow history is available at [GitHub Actions](https://github.com/GurcyberSingh99/Bus_Booking/actions).
+
+The first published run for commit `a5d92ed` completed its jobs, but the container job failed while publishing to GHCR; deployment was skipped. A local CI-equivalent run then caught formatter drift in 17 backend and 5 frontend files. Those files have been formatted, and API tests, formatting, lint and static checks now pass; frontend formatting, lint, static checks and the production build also pass. The pipeline has explicit `packages: write` permissions, OCI source labels on both images, and pinned Ubuntu 24.04 runners. Verify the latest Actions run after pushing these changes; add its URL and status here. If GHCR publishing still fails, link the created packages to this repository and grant the Actions workflow write access in package settings.
+
+On pull requests, the workflow runs quality/security/image-build jobs but does not publish images or deploy. Main pushes publish immutable `sha-<12>` and `latest` tags; `v*` tags publish version and SHA tags. The deployment job remains opt-in and requires the production environment configuration in [DEPLOYMENT.md](../DEPLOYMENT.md).

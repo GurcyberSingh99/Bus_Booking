@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Link,
   NavLink,
@@ -6,227 +6,227 @@ import {
   Routes,
   useNavigate,
   useSearchParams,
-} from 'react-router-dom';
+} from "react-router-dom";
 
 const cities = [
-  'Delhi',
-  'Mumbai',
-  'Bengaluru',
-  'Chennai',
-  'Kolkata',
-  'Hyderabad',
-  'Ahmedabad',
-  'Pune',
-  'Jaipur',
-  'Surat',
-  'Lucknow',
-  'Kanpur',
-  'Nagpur',
-  'Indore',
-  'Bhopal',
+  "Delhi",
+  "Mumbai",
+  "Bengaluru",
+  "Chennai",
+  "Kolkata",
+  "Hyderabad",
+  "Ahmedabad",
+  "Pune",
+  "Jaipur",
+  "Surat",
+  "Lucknow",
+  "Kanpur",
+  "Nagpur",
+  "Indore",
+  "Bhopal",
 ];
 
 const trips = [
   {
-    id: 'pink-city',
-    from: 'Delhi',
-    to: 'Jaipur',
-    departure: '22:15',
-    arrival: '04:10',
-    duration: '5h 55m',
-    operator: 'Pink City Express',
-    type: 'AC Sleeper',
+    id: "pink-city",
+    from: "Delhi",
+    to: "Jaipur",
+    departure: "22:15",
+    arrival: "04:10",
+    duration: "5h 55m",
+    operator: "Pink City Express",
+    type: "AC Sleeper",
     price: 899,
     seatsLeft: 8,
-    color: 'peach',
+    color: "peach",
   },
   {
-    id: 'coastal',
-    from: 'Mumbai',
-    to: 'Pune',
-    departure: '09:30',
-    arrival: '13:15',
-    duration: '3h 45m',
-    operator: 'Coastal Comfort',
-    type: 'AC Seater',
+    id: "coastal",
+    from: "Mumbai",
+    to: "Pune",
+    departure: "09:30",
+    arrival: "13:15",
+    duration: "3h 45m",
+    operator: "Coastal Comfort",
+    type: "AC Seater",
     price: 499,
     seatsLeft: 12,
-    color: 'blue',
+    color: "blue",
   },
   {
-    id: 'southern',
-    from: 'Bengaluru',
-    to: 'Chennai',
-    departure: '21:00',
-    arrival: '05:30',
-    duration: '8h 30m',
-    operator: 'Southern Star',
-    type: 'AC Sleeper',
+    id: "southern",
+    from: "Bengaluru",
+    to: "Chennai",
+    departure: "21:00",
+    arrival: "05:30",
+    duration: "8h 30m",
+    operator: "Southern Star",
+    type: "AC Sleeper",
     price: 1099,
     seatsLeft: 5,
-    color: 'green',
+    color: "green",
   },
   {
-    id: 'taj',
-    from: 'Delhi',
-    to: 'Bhopal',
-    departure: '07:00',
-    arrival: '10:30',
-    duration: '3h 30m',
-    operator: 'Taj Roadlines',
-    type: 'Volvo AC',
+    id: "taj",
+    from: "Delhi",
+    to: "Bhopal",
+    departure: "07:00",
+    arrival: "10:30",
+    duration: "3h 30m",
+    operator: "Taj Roadlines",
+    type: "Volvo AC",
     price: 599,
     seatsLeft: 16,
-    color: 'lavender',
+    color: "lavender",
   },
   {
-    id: 'deccan',
-    from: 'Hyderabad',
-    to: 'Bengaluru',
-    departure: '08:15',
-    arrival: '17:00',
-    duration: '8h 45m',
-    operator: 'Deccan Travels',
-    type: 'AC Sleeper',
+    id: "deccan",
+    from: "Hyderabad",
+    to: "Bengaluru",
+    departure: "08:15",
+    arrival: "17:00",
+    duration: "8h 45m",
+    operator: "Deccan Travels",
+    type: "AC Sleeper",
     price: 999,
     seatsLeft: 7,
-    color: 'blue',
+    color: "blue",
   },
   {
-    id: 'western',
-    from: 'Ahmedabad',
-    to: 'Surat',
-    departure: '13:20',
-    arrival: '17:10',
-    duration: '3h 50m',
-    operator: 'Western Wheels',
-    type: 'AC Seater',
+    id: "western",
+    from: "Ahmedabad",
+    to: "Surat",
+    departure: "13:20",
+    arrival: "17:10",
+    duration: "3h 50m",
+    operator: "Western Wheels",
+    type: "AC Seater",
     price: 449,
     seatsLeft: 19,
-    color: 'green',
+    color: "green",
   },
   {
-    id: 'royal',
-    from: 'Jaipur',
-    to: 'Delhi',
-    departure: '06:40',
-    arrival: '12:30',
-    duration: '5h 50m',
-    operator: 'Royal Rajasthan',
-    type: 'Volvo AC',
+    id: "royal",
+    from: "Jaipur",
+    to: "Delhi",
+    departure: "06:40",
+    arrival: "12:30",
+    duration: "5h 50m",
+    operator: "Royal Rajasthan",
+    type: "Volvo AC",
     price: 799,
     seatsLeft: 9,
-    color: 'peach',
+    color: "peach",
   },
   {
-    id: 'eastern',
-    from: 'Kolkata',
-    to: 'Lucknow',
-    departure: '14:00',
-    arrival: '23:00',
-    duration: '9h',
-    operator: 'Eastern Highway',
-    type: 'AC Sleeper',
+    id: "eastern",
+    from: "Kolkata",
+    to: "Lucknow",
+    departure: "14:00",
+    arrival: "23:00",
+    duration: "9h",
+    operator: "Eastern Highway",
+    type: "AC Sleeper",
     price: 1199,
     seatsLeft: 6,
-    color: 'lavender',
+    color: "lavender",
   },
   {
-    id: 'central',
-    from: 'Indore',
-    to: 'Bhopal',
-    departure: '10:30',
-    arrival: '14:15',
-    duration: '3h 45m',
-    operator: 'Central Connect',
-    type: 'AC Seater',
+    id: "central",
+    from: "Indore",
+    to: "Bhopal",
+    departure: "10:30",
+    arrival: "14:15",
+    duration: "3h 45m",
+    operator: "Central Connect",
+    type: "AC Seater",
     price: 399,
     seatsLeft: 15,
-    color: 'green',
+    color: "green",
   },
   {
-    id: 'orange',
-    from: 'Nagpur',
-    to: 'Pune',
-    departure: '18:10',
-    arrival: '07:00',
-    duration: '12h 50m',
-    operator: 'Orange City Lines',
-    type: 'AC Sleeper',
+    id: "orange",
+    from: "Nagpur",
+    to: "Pune",
+    departure: "18:10",
+    arrival: "07:00",
+    duration: "12h 50m",
+    operator: "Orange City Lines",
+    type: "AC Sleeper",
     price: 1299,
     seatsLeft: 4,
-    color: 'peach',
+    color: "peach",
   },
   {
-    id: 'gomti',
-    from: 'Lucknow',
-    to: 'Kanpur',
-    departure: '16:20',
-    arrival: '19:00',
-    duration: '2h 40m',
-    operator: 'Gomti Express',
-    type: 'AC Seater',
+    id: "gomti",
+    from: "Lucknow",
+    to: "Kanpur",
+    departure: "16:20",
+    arrival: "19:00",
+    duration: "2h 40m",
+    operator: "Gomti Express",
+    type: "AC Seater",
     price: 349,
     seatsLeft: 21,
-    color: 'blue',
+    color: "blue",
   },
   {
-    id: 'diamond',
-    from: 'Surat',
-    to: 'Mumbai',
-    departure: '11:45',
-    arrival: '17:15',
-    duration: '5h 30m',
-    operator: 'Diamond Travels',
-    type: 'AC Sleeper',
+    id: "diamond",
+    from: "Surat",
+    to: "Mumbai",
+    departure: "11:45",
+    arrival: "17:15",
+    duration: "5h 30m",
+    operator: "Diamond Travels",
+    type: "AC Sleeper",
     price: 699,
     seatsLeft: 10,
-    color: 'lavender',
+    color: "lavender",
   },
   {
-    id: 'mahanagar',
-    from: 'Kanpur',
-    to: 'Delhi',
-    departure: '19:30',
-    arrival: '02:15',
-    duration: '6h 45m',
-    operator: 'Mahanagar Bus',
-    type: 'Volvo AC',
+    id: "mahanagar",
+    from: "Kanpur",
+    to: "Delhi",
+    departure: "19:30",
+    arrival: "02:15",
+    duration: "6h 45m",
+    operator: "Mahanagar Bus",
+    type: "Volvo AC",
     price: 749,
     seatsLeft: 11,
-    color: 'green',
+    color: "green",
   },
   {
-    id: 'narmada',
-    from: 'Bhopal',
-    to: 'Nagpur',
-    departure: '12:30',
-    arrival: '19:00',
-    duration: '6h 30m',
-    operator: 'Narmada Roadways',
-    type: 'AC Seater',
+    id: "narmada",
+    from: "Bhopal",
+    to: "Nagpur",
+    departure: "12:30",
+    arrival: "19:00",
+    duration: "6h 30m",
+    operator: "Narmada Roadways",
+    type: "AC Seater",
     price: 649,
     seatsLeft: 13,
-    color: 'blue',
+    color: "blue",
   },
   {
-    id: 'metroline',
-    from: 'Chennai',
-    to: 'Hyderabad',
-    departure: '20:30',
-    arrival: '06:00',
-    duration: '9h 30m',
-    operator: 'Metroline Travels',
-    type: 'AC Sleeper',
+    id: "metroline",
+    from: "Chennai",
+    to: "Hyderabad",
+    departure: "20:30",
+    arrival: "06:00",
+    duration: "9h 30m",
+    operator: "Metroline Travels",
+    type: "AC Sleeper",
     price: 1149,
     seatsLeft: 6,
-    color: 'peach',
+    color: "peach",
   },
 ];
 
 const navItems = [
-  { path: '/trips', label: 'Find a bus' },
-  { path: '/seats', label: 'Seat selection' },
+  { path: "/trips", label: "Find a bus" },
+  { path: "/seats", label: "Seat selection" },
 ];
 
 function Brand() {
@@ -253,12 +253,12 @@ function BusIcon() {
   );
 }
 
-function TripCard({ trip, index, date = '' }) {
-  const seatUrl = `/seats?bus=${trip.id}${date ? `&date=${date}` : ''}${trip.passengers ? `&passengers=${trip.passengers}` : ''}`;
+function TripCard({ trip, index, date = "" }) {
+  const seatUrl = `/seats?bus=${trip.id}${date ? `&date=${date}` : ""}${trip.passengers ? `&passengers=${trip.passengers}` : ""}`;
   return (
     <article
       className="trip-card"
-      style={{ '--card-delay': `${index * 70}ms` }}
+      style={{ "--card-delay": `${index * 70}ms` }}
     >
       <div className={`operator-mark ${trip.color}`}>
         <BusIcon />
@@ -296,7 +296,7 @@ function TripCard({ trip, index, date = '' }) {
       </div>
       <div className="trip-price">
         <span className="seat-count">{trip.seatsLeft} seats left</span>
-        <strong>₹{trip.price.toLocaleString('en-IN')}</strong>
+        <strong>₹{trip.price.toLocaleString("en-IN")}</strong>
         <span>per seat</span>
         <Link
           className="trip-cta"
@@ -400,7 +400,7 @@ function Home() {
                   {trip.from} <i>to</i> {trip.to}
                 </b>
                 <small>
-                  From ₹{trip.price.toLocaleString('en-IN')} · {trip.duration}
+                  From ₹{trip.price.toLocaleString("en-IN")} · {trip.duration}
                 </small>
               </span>
               <span className="pill-arrow">→</span>
@@ -413,36 +413,36 @@ function Home() {
 }
 
 function Trips() {
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [date, setDate] = useState('');
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [date, setDate] = useState("");
   const [passengers, setPassengers] = useState(1);
-  const [time, setTime] = useState('all');
-  const [sort, setSort] = useState('recommended');
-  const [busType, setBusType] = useState('all');
+  const [time, setTime] = useState("all");
+  const [sort, setSort] = useState("recommended");
+  const [busType, setBusType] = useState("all");
   const filtered = trips
     .filter((trip) => {
       const hour = Number(trip.departure.slice(0, 2));
       const matchesTime =
-        time === 'all' ||
-        (time === 'morning' && hour >= 6 && hour < 12) ||
-        (time === 'afternoon' && hour >= 12 && hour < 18) ||
-        (time === 'evening' && hour >= 18) ||
-        (time === 'night' && hour < 6);
+        time === "all" ||
+        (time === "morning" && hour >= 6 && hour < 12) ||
+        (time === "afternoon" && hour >= 12 && hour < 18) ||
+        (time === "evening" && hour >= 18) ||
+        (time === "night" && hour < 6);
       return (
         (!from || trip.from === from) &&
         (!to || trip.to === to) &&
         matchesTime &&
         trip.seatsLeft >= passengers &&
-        (busType === 'all' || trip.type.toLowerCase().includes(busType))
+        (busType === "all" || trip.type.toLowerCase().includes(busType))
       );
     })
     .sort((a, b) =>
-      sort === 'price-low'
+      sort === "price-low"
         ? a.price - b.price
-        : sort === 'price-high'
+        : sort === "price-high"
           ? b.price - a.price
-          : sort === 'departure'
+          : sort === "departure"
             ? a.departure.localeCompare(b.departure)
             : 0,
     );
@@ -515,7 +515,7 @@ function Trips() {
           >
             {[1, 2, 3, 4, 5, 6].map((count) => (
               <option key={count} value={count}>
-                {count} {count === 1 ? 'traveller' : 'travellers'}
+                {count} {count === 1 ? "traveller" : "travellers"}
               </option>
             ))}
           </select>
@@ -525,8 +525,8 @@ function Trips() {
           type="button"
           onClick={() =>
             document
-              .querySelector('.trip-list')
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              .querySelector(".trip-list")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" })
           }
           aria-label="Show buses"
         >
@@ -537,11 +537,11 @@ function Trips() {
         <span>
           <strong>{filtered.length} buses</strong> to get you moving
           {date
-            ? ` · ${new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
-            : ''}
+            ? ` · ${new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+            : ""}
         </span>
         <label className="sort-label">
-          Sort by{' '}
+          Sort by{" "}
           <select
             className="sort-select"
             value={sort}
@@ -585,12 +585,12 @@ function Trips() {
           className="clear-filters"
           type="button"
           onClick={() => {
-            setFrom('');
-            setTo('');
-            setDate('');
-            setTime('all');
-            setSort('recommended');
-            setBusType('all');
+            setFrom("");
+            setTo("");
+            setDate("");
+            setTime("all");
+            setSort("recommended");
+            setBusType("all");
             setPassengers(1);
           }}
         >
@@ -624,50 +624,50 @@ function Trips() {
 function SeatSelection() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const trip = trips.find((item) => item.id === params.get('bus')) || trips[0];
+  const trip = trips.find((item) => item.id === params.get("bus")) || trips[0];
   const maxSeats = Math.min(
     6,
-    Math.max(1, Number(params.get('passengers')) || 1),
+    Math.max(1, Number(params.get("passengers")) || 1),
   );
   const [selected, setSelected] = useState([]);
-  const reserved = new Set(['A2', 'A5', 'B4', 'C1', 'C6', 'D3', 'E5', 'F2']);
+  const reserved = new Set(["A2", "A5", "B4", "C1", "C6", "D3", "E5", "F2"]);
   const seats = [
-    'A1',
-    'A2',
-    'A3',
-    'A4',
-    'A5',
-    'A6',
-    'B1',
-    'B2',
-    'B3',
-    'B4',
-    'B5',
-    'B6',
-    'C1',
-    'C2',
-    'C3',
-    'C4',
-    'C5',
-    'C6',
-    'D1',
-    'D2',
-    'D3',
-    'D4',
-    'D5',
-    'D6',
-    'E1',
-    'E2',
-    'E3',
-    'E4',
-    'E5',
-    'E6',
-    'F1',
-    'F2',
-    'F3',
-    'F4',
-    'F5',
-    'F6',
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6",
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
   ];
   const toggleSeat = (seat) =>
     setSelected((current) =>
@@ -680,10 +680,10 @@ function SeatSelection() {
   const continueToCheckout = () => {
     const next = new URLSearchParams({
       bus: trip.id,
-      seats: selected.join(','),
+      seats: selected.join(","),
       passengers: String(maxSeats),
     });
-    if (params.get('date')) next.set('date', params.get('date'));
+    if (params.get("date")) next.set("date", params.get("date"));
     navigate(`/checkout?${next.toString()}`);
   };
   return (
@@ -697,8 +697,8 @@ function SeatSelection() {
             Pick your <span>seat.</span>
           </h1>
           <p className="intro">
-            Choose {maxSeats} {maxSeats === 1 ? 'seat' : 'seats'} for{' '}
-            {maxSeats === 1 ? 'your journey' : 'your group'}.
+            Choose {maxSeats} {maxSeats === 1 ? "seat" : "seats"} for{" "}
+            {maxSeats === 1 ? "your journey" : "your group"}.
           </p>
         </div>
         <Link className="text-link" to="/trips">
@@ -716,7 +716,7 @@ function SeatSelection() {
           </span>
         </div>
         <b>
-          ₹{trip.price.toLocaleString('en-IN')} <small>/ seat</small>
+          ₹{trip.price.toLocaleString("en-IN")} <small>/ seat</small>
         </b>
       </div>
       <div className="seat-layout">
@@ -733,8 +733,8 @@ function SeatSelection() {
                   type="button"
                   disabled={reserved.has(seat)}
                   onClick={() => toggleSeat(seat)}
-                  className={`seat ${reserved.has(seat) ? 'reserved' : selected.includes(seat) ? 'chosen' : ''}`}
-                  aria-label={`Seat ${seat}${reserved.has(seat) ? ', unavailable' : selected.includes(seat) ? ', selected' : ', available'}`}
+                  className={`seat ${reserved.has(seat) ? "reserved" : selected.includes(seat) ? "chosen" : ""}`}
+                  aria-label={`Seat ${seat}${reserved.has(seat) ? ", unavailable" : selected.includes(seat) ? ", selected" : ", available"}`}
                 >
                   {seat.slice(1)}
                 </button>
@@ -755,8 +755,8 @@ function SeatSelection() {
         </div>
         <aside className="seat-summary">
           <p className="eyebrow">
-            YOUR SELECTION · {maxSeats}{' '}
-            {maxSeats === 1 ? 'TRAVELLER' : 'TRAVELLERS'}
+            YOUR SELECTION · {maxSeats}{" "}
+            {maxSeats === 1 ? "TRAVELLER" : "TRAVELLERS"}
           </p>
           <div className="summary-route">
             <b>{trip.from}</b>
@@ -769,15 +769,15 @@ function SeatSelection() {
           <div className="summary-seats">
             <span>Selected seats</span>
             <strong>
-              {selected.length ? selected.join(', ') : 'Choose a seat'}
+              {selected.length ? selected.join(", ") : "Choose a seat"}
             </strong>
           </div>
           <div className="summary-total">
             <span>
-              {selected.length} {selected.length === 1 ? 'seat' : 'seats'}
+              {selected.length} {selected.length === 1 ? "seat" : "seats"}
             </span>
             <strong>
-              ₹{(trip.price * selected.length).toLocaleString('en-IN')}
+              ₹{(trip.price * selected.length).toLocaleString("en-IN")}
             </strong>
           </div>
           <button
@@ -789,7 +789,7 @@ function SeatSelection() {
             Continue to checkout <span>→</span>
           </button>
           <small className="demo-small">
-            Select {maxSeats} {maxSeats === 1 ? 'seat' : 'seats'} to continue.
+            Select {maxSeats} {maxSeats === 1 ? "seat" : "seats"} to continue.
             Demo only; no reservation or payment is made.
           </small>
         </aside>
@@ -803,37 +803,37 @@ function SeatSelection() {
 
 function Checkout() {
   const [params] = useSearchParams();
-  const trip = trips.find((item) => item.id === params.get('bus')) || trips[0];
-  const seats = (params.get('seats') || '').split(',').filter(Boolean);
-  const passengerCount = Number(params.get('passengers')) || seats.length || 1;
-  const date = params.get('date');
-  const [step, setStep] = useState('details');
-  const [method, setMethod] = useState('upi');
+  const trip = trips.find((item) => item.id === params.get("bus")) || trips[0];
+  const seats = (params.get("seats") || "").split(",").filter(Boolean);
+  const passengerCount = Number(params.get("passengers")) || seats.length || 1;
+  const date = params.get("date");
+  const [step, setStep] = useState("details");
+  const [method, setMethod] = useState("upi");
   const [passenger, setPassenger] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    name: "",
+    email: "",
+    phone: "",
   });
   const total = trip.price * seats.length;
   const paymentMethods = [
-    { id: 'upi', label: 'UPI', detail: 'Pay with any UPI app', icon: '✳' },
+    { id: "upi", label: "UPI", detail: "Pay with any UPI app", icon: "✳" },
     {
-      id: 'card',
-      label: 'Credit / debit card',
-      detail: 'Visa, Mastercard, RuPay',
-      icon: '▰',
+      id: "card",
+      label: "Credit / debit card",
+      detail: "Visa, Mastercard, RuPay",
+      icon: "▰",
     },
     {
-      id: 'netbanking',
-      label: 'Net banking',
-      detail: 'All major banks',
-      icon: '▤',
+      id: "netbanking",
+      label: "Net banking",
+      detail: "All major banks",
+      icon: "▤",
     },
   ];
   const submitDetails = (event) => {
     event.preventDefault();
-    setStep('payment');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setStep("payment");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   return (
     <section className="checkout-page">
@@ -851,29 +851,29 @@ function Checkout() {
         </div>
         <Link
           className="text-link"
-          to={`/seats?bus=${trip.id}${date ? `&date=${date}` : ''}`}
+          to={`/seats?bus=${trip.id}${date ? `&date=${date}` : ""}`}
         >
           ← Change seats
         </Link>
       </div>
       <div className="checkout-steps">
-        <span className={step === 'details' ? 'current' : 'done'}>
+        <span className={step === "details" ? "current" : "done"}>
           <i>1</i> Passenger details
         </span>
         <b />
-        <span className={step === 'payment' ? 'current' : ''}>
+        <span className={step === "payment" ? "current" : ""}>
           <i>2</i> Payment
         </span>
       </div>
       <div className="checkout-layout">
         <section className="checkout-panel">
-          {step === 'details' ? (
+          {step === "details" ? (
             <form className="passenger-form" onSubmit={submitDetails}>
               <div className="panel-title">
                 <h2>Who's travelling?</h2>
                 <span>
-                  {passengerCount}{' '}
-                  {passengerCount === 1 ? 'traveller' : 'travellers'}
+                  {passengerCount}{" "}
+                  {passengerCount === 1 ? "traveller" : "travellers"}
                 </span>
               </div>
               <label>
@@ -919,10 +919,10 @@ function Checkout() {
               </div>
               <div className="traveller-seat">
                 <span className="seat-tag">
-                  {seats.length} {seats.length === 1 ? 'seat' : 'seats'}
+                  {seats.length} {seats.length === 1 ? "seat" : "seats"}
                 </span>
                 <span>
-                  {seats.length ? seats.join(', ') : 'No seat selected'}
+                  {seats.length ? seats.join(", ") : "No seat selected"}
                 </span>
               </div>
               <button className="checkout-primary" type="submit">
@@ -944,7 +944,7 @@ function Checkout() {
                   <button
                     type="button"
                     key={option.id}
-                    className={`payment-option ${method === option.id ? 'selected' : ''}`}
+                    className={`payment-option ${method === option.id ? "selected" : ""}`}
                     onClick={() => setMethod(option.id)}
                   >
                     <span className="payment-icon">{option.icon}</span>
@@ -968,12 +968,12 @@ function Checkout() {
                 className="checkout-primary pay-disabled"
                 disabled
               >
-                Pay ₹{total.toLocaleString('en-IN')} <span>→</span>
+                Pay ₹{total.toLocaleString("en-IN")} <span>→</span>
               </button>
               <button
                 type="button"
                 className="back-details"
-                onClick={() => setStep('details')}
+                onClick={() => setStep("details")}
               >
                 ← Back to passenger details
               </button>
@@ -992,22 +992,22 @@ function Checkout() {
           </p>
           {date && (
             <p className="checkout-date">
-              Travel date{' '}
+              Travel date{" "}
               <strong>
-                {new Date(`${date}T00:00:00`).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
+                {new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
                 })}
               </strong>
             </p>
           )}
           <div className="price-row">
             <span>
-              {seats.length || 0} × seat{' '}
-              {seats.length ? `(${seats.join(', ')})` : ''}
+              {seats.length || 0} × seat{" "}
+              {seats.length ? `(${seats.join(", ")})` : ""}
             </span>
-            <strong>₹{total.toLocaleString('en-IN')}</strong>
+            <strong>₹{total.toLocaleString("en-IN")}</strong>
           </div>
           <div className="price-row">
             <span>Service fee</span>
@@ -1015,7 +1015,7 @@ function Checkout() {
           </div>
           <div className="checkout-total">
             <span>Total</span>
-            <strong>₹{total.toLocaleString('en-IN')}</strong>
+            <strong>₹{total.toLocaleString("en-IN")}</strong>
           </div>
           <small className="demo-small">
             Sample fare only. This demo does not create a reservation.
@@ -1066,7 +1066,7 @@ function App() {
             <NavLink
               key={path}
               to={path}
-              className={({ isActive }) => (isActive ? 'active' : '')}
+              className={({ isActive }) => (isActive ? "active" : "")}
             >
               {label}
             </NavLink>

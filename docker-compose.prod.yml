@@ -6,7 +6,7 @@ x-logging: &default-logging
 
 services:
   database:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139
     restart: unless-stopped
     logging: *default-logging
     environment:
@@ -53,18 +53,19 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q --spider http://127.0.0.1/ || exit 1']
+      test: ['CMD-SHELL', 'wget -q --spider http://127.0.0.1:8080/ || exit 1']
       interval: 15s
       timeout: 4s
       retries: 5
 
   nginx:
-    image: nginx:alpine
+    image: nginxinc/nginx-unprivileged:alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
     restart: unless-stopped
     logging: *default-logging
+    group_add: ['11001']
     ports:
-      - '80:80'
-      - '443:443'
+      - '80:8080'
+      - '443:8443'
     volumes:
       - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
@@ -74,7 +75,7 @@ services:
       frontend:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'wget -q --spider http://127.0.0.1/healthz']
+      test: ['CMD-SHELL', 'wget -q --spider http://127.0.0.1:8080/healthz']
       interval: 15s
       timeout: 4s
       retries: 5
