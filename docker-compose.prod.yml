@@ -1,0 +1,83 @@
+x-logging: &default-logging
+  driver: local
+  options:
+    max-size: 10m
+    max-file: '5'
+
+services:
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Missing POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-bus_reservation_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  backend:
+    image: ${GHCR_IMAGE_PREFIX:?Missing GHCR_IMAGE_PREFIX}/backend:${IMAGE_TAG:?Missing IMAGE_TAG}
+    init: true
+    restart: unless-stopped
+    logging: *default-logging
+    stop_grace_period: 20s
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      FRONTEND_URL: https://${APP_DOMAIN:?Missing APP_DOMAIN}
+      DATABASE_URL: ${DATABASE_URL:?Missing DATABASE_URL}
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:5000/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+      start_period: 30s
+
+  frontend:
+    image: ${GHCR_IMAGE_PREFIX:?Missing GHCR_IMAGE_PREFIX}/frontend:${IMAGE_TAG:?Missing IMAGE_TAG}
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q --spider http://127.0.0.1/ || exit 1']
+      interval: 15s
+      timeout: 4s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q --spider http://127.0.0.1/healthz']
+      interval: 15s
+      timeout: 4s
+      retries: 5
+
+volumes:
+  postgres_data:

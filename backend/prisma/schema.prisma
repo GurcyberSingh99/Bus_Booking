@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SeatStatus {
+  AVAILABLE
+  BOOKED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Trip {
+  id          String      @id @default(cuid())
+  sampleKey   String?     @unique
+  operator    String
+  busType     String
+  fromCity    String
+  toCity      String
+  travelDate  DateTime    @db.Date
+  departureAt DateTime
+  arrivalAt   DateTime
+  fare        Int
+  createdAt   DateTime    @default(now())
+  stops       TripStop[]
+  seats       TripSeat[]
+  bookings    Booking[]
+
+  @@index([travelDate, fromCity, toCity])
+}
+
+model TripStop {
+  id        String   @id @default(cuid())
+  tripId    String
+  name      String
+  sortOrder Int
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, sortOrder])
+  @@unique([tripId, name])
+}
+
+model TripSeat {
+  id          String     @id @default(cuid())
+  tripId      String
+  seatNumber  String
+  status      SeatStatus @default(AVAILABLE)
+  bookingId   String?
+  trip        Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  booking     Booking?   @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@unique([tripId, seatNumber])
+  @@index([bookingId])
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  pnr             String        @unique
+  tripId          String
+  status          BookingStatus @default(CONFIRMED)
+  travelDate      DateTime      @db.Date
+  boardingStopId  String
+  dropStopId      String
+  contactEmail    String
+  contactPhone    String
+  passengers      Json
+  seatNumbers     String[]
+  totalFare       Int
+  createdAt       DateTime      @default(now())
+  cancelledAt     DateTime?
+  trip            Trip          @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  seats           TripSeat[]
+
+  @@index([tripId, travelDate])
+}

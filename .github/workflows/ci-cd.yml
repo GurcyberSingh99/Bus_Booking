@@ -1,0 +1,224 @@
+name: CI / CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      rollback_image_tag:
+        description: Optional existing tag such as sha-0123456789ab to roll back the app
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bus-trip-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Build and check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: bus_trip
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d bus_trip"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/bus_trip?schema=public
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install and generate backend client
+        working-directory: backend
+        run: |
+          npm ci
+          npm run db:generate
+          npm run db:deploy
+          npm run db:seed
+          npm run format:check
+          npm run lint
+          npm run static:check
+          npm test
+
+      - name: Install and build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run format:check
+          npm run lint
+          npm run static:check
+          npm run build
+
+      - name: Check deployment scripts
+        run: bash -n scripts/*.sh scripts/lib/*.sh
+
+  security:
+    name: Scan repository with Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan source, dependencies and configuration
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+          format: table
+
+  container-build:
+    name: Build and scan container images
+    needs: [quality, security]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_prefix: ${{ steps.image.outputs.prefix }}
+      short_sha: ${{ steps.image.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set image prefix
+        id: image
+        run: |
+          echo "prefix=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${GITHUB_SHA:0:12}" >> "$GITHUB_OUTPUT"
+      - name: Sign in to GHCR
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - name: Build images
+        env:
+          IMAGE_PREFIX: ${{ steps.image.outputs.prefix }}
+          IMAGE_TAG: sha-${{ steps.image.outputs.short_sha }}
+        run: |
+          docker build --pull -t "$IMAGE_PREFIX/backend:$IMAGE_TAG" ./backend
+          docker build --pull -t "$IMAGE_PREFIX/frontend:$IMAGE_TAG" ./frontend
+
+      - name: Scan backend image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ steps.image.outputs.prefix }}/backend:sha-${{ steps.image.outputs.short_sha }}
+          severity: CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+      - name: Scan frontend image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ steps.image.outputs.prefix }}/frontend:sha-${{ steps.image.outputs.short_sha }}
+          severity: CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+
+      - name: Publish version tags to GHCR
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        env:
+          IMAGE_PREFIX: ${{ steps.image.outputs.prefix }}
+          IMAGE_TAG: sha-${{ steps.image.outputs.short_sha }}
+        run: |
+          for image in backend frontend; do
+            docker push "$IMAGE_PREFIX/$image:$IMAGE_TAG"
+            if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+              docker tag "$IMAGE_PREFIX/$image:$IMAGE_TAG" "$IMAGE_PREFIX/$image:latest"
+              docker push "$IMAGE_PREFIX/$image:latest"
+            else
+              docker tag "$IMAGE_PREFIX/$image:$IMAGE_TAG" "$IMAGE_PREFIX/$image:$GITHUB_REF_NAME"
+              docker push "$IMAGE_PREFIX/$image:$GITHUB_REF_NAME"
+            fi
+          done
+
+  deploy:
+    name: Deploy to Ubuntu VM
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    needs: container-build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare SSH and deployment environment
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          APP_DOMAIN: ${{ vars.APP_DOMAIN }}
+          CERTBOT_EMAIL: ${{ vars.CERTBOT_EMAIL }}
+          GHCR_IMAGE_PREFIX: ${{ needs.container-build.outputs.image_prefix }}
+          IMAGE_TAG: ${{ inputs.rollback_image_tag || format('sha-{0}', needs.container-build.outputs.short_sha) }}
+          GHCR_PULL_USERNAME: ${{ secrets.GHCR_PULL_USERNAME }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB || 'bus_reservation_db' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Set production variable DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Set production variable DEPLOY_USER}"
+          : "${DEPLOY_PATH:?Set production variable DEPLOY_PATH}"
+          : "${APP_DOMAIN:?Set production variable APP_DOMAIN}"
+          : "${CERTBOT_EMAIL:?Set production variable CERTBOT_EMAIL}"
+          : "${POSTGRES_USER:?Set production secret POSTGRES_USER}"
+          : "${POSTGRES_PASSWORD:?Set production secret POSTGRES_PASSWORD}"
+          : "${DATABASE_URL:?Set production secret DATABASE_URL}"
+          : "${GHCR_PULL_USERNAME:?Set production secret GHCR_PULL_USERNAME}"
+          : "${GHCR_PULL_TOKEN:?Set production secret GHCR_PULL_TOKEN}"
+          : "${DEPLOY_SSH_KEY:?Set production secret DEPLOY_SSH_KEY}"
+          : "${DEPLOY_KNOWN_HOSTS:?Set production secret DEPLOY_KNOWN_HOSTS}"
+          if [[ ! "$IMAGE_TAG" =~ ^sha-[0-9a-f]{12}$ ]]; then
+            printf 'IMAGE_TAG must be an existing immutable sha-<12 lowercase hex> image tag.\n' >&2
+            exit 2
+          fi
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          printf 'IMAGE_TAG=%s\nGHCR_IMAGE_PREFIX=%s\nAPP_DOMAIN=%s\nCERTBOT_EMAIL=%s\nPOSTGRES_DB=%s\n' \
+            "$IMAGE_TAG" "$GHCR_IMAGE_PREFIX" "$APP_DOMAIN" "$CERTBOT_EMAIL" "$POSTGRES_DB" > "$RUNNER_TEMP/deploy.env"
+          printf 'POSTGRES_USER_B64=%s\nPOSTGRES_PASSWORD_B64=%s\nDATABASE_URL_B64=%s\n' \
+            "$(printf '%s' "$POSTGRES_USER" | base64 -w 0)" \
+            "$(printf '%s' "$POSTGRES_PASSWORD" | base64 -w 0)" \
+            "$(printf '%s' "$DATABASE_URL" | base64 -w 0)" >> "$RUNNER_TEMP/deploy.env"
+          chmod 600 "$RUNNER_TEMP/deploy.env"
+
+          SSH=(ssh -i "$HOME/.ssh/deploy_key" -p "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
+          SCP=(scp -i "$HOME/.ssh/deploy_key" -P "$DEPLOY_PORT" -o StrictHostKeyChecking=yes)
+          "${SSH[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$DEPLOY_PATH/nginx' '$DEPLOY_PATH/scripts/lib'"
+          "${SCP[@]}" docker-compose.prod.yml "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+          "${SCP[@]}" nginx/nginx.prod.conf "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/nginx/"
+          "${SCP[@]}" scripts/deploy.sh scripts/renew-certificate.sh scripts/backup-db.sh scripts/restore-db.sh "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/scripts/"
+          "${SCP[@]}" scripts/lib/compose.sh "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/scripts/lib/"
+          "${SCP[@]}" "$RUNNER_TEMP/deploy.env" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/.env.production"
+
+          printf '%s\n%s\n' "$GHCR_PULL_USERNAME" "$GHCR_PULL_TOKEN" | \
+            "${SSH[@]}" "$DEPLOY_USER@$DEPLOY_HOST" 'read -r user; read -r token; printf "%s" "$token" | docker login ghcr.io --username "$user" --password-stdin; unset token'
+          "${SSH[@]}" "$DEPLOY_USER@$DEPLOY_HOST" "chmod 600 '$DEPLOY_PATH/.env.production' && chmod +x '$DEPLOY_PATH/scripts/deploy.sh' '$DEPLOY_PATH/scripts/renew-certificate.sh' '$DEPLOY_PATH/scripts/backup-db.sh' '$DEPLOY_PATH/scripts/restore-db.sh' && '$DEPLOY_PATH/scripts/deploy.sh' '$DEPLOY_PATH'"

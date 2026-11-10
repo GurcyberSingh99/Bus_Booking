@@ -1,0 +1,38 @@
+{
+  "name": "bus-trip-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "predev": "prisma migrate deploy && prisma db seed",
+    "start": "prisma migrate deploy && prisma db seed && node src/server.js",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand",
+    "lint": "eslint src tests prisma/seed.js *.js",
+    "format:check": "prettier --check src tests prisma/seed.js *.js eslint.config.js package.json",
+    "static:check": "node --check src/server.js && node --check src/app.js && node --check prisma/seed.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "prisma": "^6.19.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^16.5.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.9.10",
+    "supertest": "^7.0.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}
