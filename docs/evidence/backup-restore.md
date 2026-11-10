@@ -8,7 +8,7 @@ Reproduce with `bash scripts/backup-db.sh /var/backups/bus-trip`, then restore t
 
 ## Restart and recovery
 
-On 2026-11-10, `docker compose restart backend` returned the API to healthy status and `/ready` returned HTTP 200 after reconnecting to PostgreSQL. The PostgreSQL named volume persisted through container recreation. The same readiness check passed through the self-signed local HTTPS proxy at `https://localhost:8443/ready`. Reproduce with `docker compose restart backend`, `docker compose ps`, and `curl -i http://localhost:8080/ready`.
+On 2026-11-10, `docker compose restart backend` returned the API to healthy status and `/ready` returned HTTP 200 after reconnecting to PostgreSQL. A separate fault-injection drill stopped the API; the reverse proxy returned HTTP 502 for `/ready`, then returned `{"status":"ready"}` after the API was started again. The PostgreSQL named volume persisted through container recreation. The readiness check also passed through the self-signed local HTTPS proxy at `https://localhost:8443/ready`. Reproduce with `docker compose stop backend`, probe `/ready`, then `docker compose start backend` and wait until healthy.
 
 ## CI result
 
