@@ -1,4 +1,4 @@
-import { prisma } from "../config/prisma.js";
+import { prisma } from '../config/prisma.js';
 
 export async function checkDatabase() {
   await prisma.$queryRaw`SELECT 1`;

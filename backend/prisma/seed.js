@@ -1,33 +1,33 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const cities = [
-  "Delhi",
-  "Jaipur",
-  "Agra",
-  "Lucknow",
-  "Varanasi",
-  "Kolkata",
-  "Bhopal",
-  "Mumbai",
-  "Surat",
-  "Ahmedabad",
-  "Pune",
-  "Bengaluru",
-  "Chennai",
-  "Hyderabad",
-  "Kochi",
+  'Delhi',
+  'Jaipur',
+  'Agra',
+  'Lucknow',
+  'Varanasi',
+  'Kolkata',
+  'Bhopal',
+  'Mumbai',
+  'Surat',
+  'Ahmedabad',
+  'Pune',
+  'Bengaluru',
+  'Chennai',
+  'Hyderabad',
+  'Kochi',
 ];
 const operators = [
-  "Indigo Roadways",
-  "Royal Travels",
-  "Coastliner",
-  "CityLink",
+  'Indigo Roadways',
+  'Royal Travels',
+  'Coastliner',
+  'CityLink',
 ];
-const busTypes = ["AC Sleeper", "Volvo Multi-Axle", "AC Seater"];
+const busTypes = ['AC Sleeper', 'Volvo Multi-Axle', 'AC Seater'];
 const seats = Array.from({ length: 24 }, (_, index) => {
   const row = Math.floor(index / 4) + 1;
-  const column = ["A", "B", "C", "D"][index % 4];
+  const column = ['A', 'B', 'C', 'D'][index % 4];
   return `${row}${column}`;
 });
 
