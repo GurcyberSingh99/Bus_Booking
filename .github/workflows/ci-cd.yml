@@ -48,17 +48,33 @@ jobs:
             backend/package-lock.json
             frontend/package-lock.json
 
-      - name: Install and generate backend client
+      - name: Install backend dependencies
         working-directory: backend
-        run: |
-          npm ci
-          npm run db:generate
-          npm run db:deploy
-          npm run db:seed
-          npm run format:check
-          npm run lint
-          npm run static:check
-          npm test
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: backend
+        run: npm run db:generate
+
+      - name: Apply migrations and seed CI database
+        working-directory: backend
+        run: npm run db:deploy && npm run db:seed
+
+      - name: Check backend formatting
+        working-directory: backend
+        run: npm run format:check
+
+      - name: Lint backend
+        working-directory: backend
+        run: npm run lint
+
+      - name: Check backend JavaScript syntax
+        working-directory: backend
+        run: npm run static:check
+
+      - name: Test backend API
+        working-directory: backend
+        run: npm test
 
       - name: Install and build frontend
         working-directory: frontend
