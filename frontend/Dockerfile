@@ -9,6 +9,8 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
 LABEL org.opencontainers.image.source="https://github.com/GurcyberSingh99/Bus_Booking"
 LABEL org.opencontainers.image.description="Bus trip reservation web client"
+USER 0
+RUN apk add --no-cache 'brotli-libs=1.2.1-r0'
 COPY --from=build --chown=101:101 /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 USER 101
